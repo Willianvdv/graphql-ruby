@@ -71,6 +71,11 @@ module Graphql
         default: false,
         desc: "Include GraphQL::Batch installation"
 
+      class_option :skip_mutation_root_type,
+        type: :boolean,
+        default: false,
+        desc: "Skip creation of a root mutation type"
+
       # These two options are taken from Rails' own generators'
       class_option :api,
         type: :boolean,
@@ -87,13 +92,11 @@ RUBY
         create_dir("app/graphql/types")
         template("schema.erb", schema_file_path)
 
-        # Note: Yuo can't have a schema without the query type, otherwise introspection breaks
+        # Note: You can't have a schema without the query type, otherwise introspection breaks
         template("query_type.erb", "app/graphql/types/query_type.rb")
         insert_root_type('query', 'QueryType')
 
-        unless no? 'Create root mutation type? Y/n'
-          create_mutation_root_type
-        end
+        create_mutation_root_type unless options.skip_mutation_root_type?
 
         template("graphql_controller.erb", "app/controllers/graphql_controller.rb")
         route('post "/graphql", to: "graphql#execute"')

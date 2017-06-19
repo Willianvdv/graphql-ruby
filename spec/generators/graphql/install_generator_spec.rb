@@ -3,20 +3,19 @@ require "spec_helper"
 require "generators/graphql/install_generator"
 
 class GraphQLGeneratorsInstallGeneratorTest < Rails::Generators::TestCase
-
   tests Graphql::Generators::InstallGenerator
   destination File.expand_path("../../../tmp/dummy", File.dirname(__FILE__))
 
   setup do
     prepare_destination
-    FileUtils.cd(File.expand_path("../../../tmp", File.dirname(__FILE__))) do
+    FileUtils.cd(File.join(destination_root, '..')) do
       `rm -rf dummy`
       `rails new dummy --skip-active-record --skip-test-unit --skip-spring --skip-bundle`
     end
   end
 
   test "it generates a folder structure" do
-    run_generator([])
+    run_generator(["--skip-mutation_root_type"])
 
     assert_file "app/graphql/types/.keep"
     assert_file "app/graphql/mutations/.keep"
@@ -65,7 +64,7 @@ RUBY
   end
 
   test "it generates graphql-batch and relay boilerplate" do
-    run_generator(["--batch", "--relay"])
+    run_generator(["--skip_mutation_root_type", "--batch", "--relay"])
     assert_file "app/graphql/loaders/.keep"
     assert_file "Gemfile" do |contents|
       assert_match %r{gem ('|")graphql-batch('|")}, contents
