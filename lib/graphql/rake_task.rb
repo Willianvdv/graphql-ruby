@@ -29,11 +29,19 @@ module GraphQL
       namespace: "graphql",
       dependencies: nil,
       schema_name: nil,
-      load_schema: ->(task) { Object.const_get(task.schema_name) },
+      load_schema: ->(task) do
+        if defined?(GraphQL.schema)
+          GraphQL.schema
+        else
+          Object.const_get(task.schema_name)
+        end
+      end,
       load_context: ->(task) { {} },
       only: nil,
       except: nil,
-      directory: ".",
+      directory: ->(task) do
+        defined?(GraphQL.schema_directory) ? GraphQL.schema_directory : './'
+      end,
       idl_outfile: "schema.graphql",
       json_outfile: "schema.json",
     }
@@ -110,11 +118,11 @@ module GraphQL
     end
 
     def idl_path
-      File.join(@directory, @idl_outfile)
+      File.join(@directory.call(self), @idl_outfile)
     end
 
     def json_path
-      File.join(@directory, @json_outfile)
+      File.join(@directory.call(self), @json_outfile)
     end
 
     # Use the Rake DSL to add tasks

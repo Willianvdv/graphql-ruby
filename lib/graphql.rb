@@ -5,6 +5,8 @@ require "set"
 require "singleton"
 
 module GraphQL
+  require_relative "./graphql/railtie" if defined? Rails
+
   # Ruby stdlib was pretty busted until this fix:
   # https://github.com/ruby/ruby/commit/46c0e79bb5b96c45c166ef62f8e585f528862abb#diff-43adf0e587a50dbaf51764a262008d40
   module Delegate
