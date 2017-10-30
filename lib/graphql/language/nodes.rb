@@ -189,9 +189,10 @@ module GraphQL
               if item.is_a?(Array)
                 deep_to_string(item, current_depth + 1)
               else
-                ('  ' * current_depth) + item
+                # ('  ' * current_depth) + item
+                item
               end
-            end.join("\n")
+            end.join(' ')
           end
 
           deep_to_string definitions.map(&:to_graphql)
@@ -234,11 +235,13 @@ module GraphQL
               "#{name}(#{arguments.map(&:to_graphql).join(' ')})"
             end
 
+          maybe_alias = @alias.nil? ? '' : "#{@alias}: "
+
           if @selections.empty?
-            name_maybe_with_arguments
+            "#{maybe_alias}#{name_maybe_with_arguments}"
           else
             [
-              "#{name_maybe_with_arguments} {",
+              "#{maybe_alias}#{name_maybe_with_arguments} {",
               @selections.map(&:to_graphql),
               "}",
             ]
