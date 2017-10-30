@@ -25,6 +25,11 @@ module GraphQL
           initialize_node(options)
         end
 
+        def to_graphql
+          binding.pry
+          "<#{self.class}>"
+        end
+
         # This is called with node-specific options
         def initialize_node(options={})
           raise NotImplementedError
@@ -126,6 +131,10 @@ module GraphQL
           @value = value
         end
 
+        def to_graphql
+          "#{name}: #{value}"
+        end
+
         def children
           [value].flatten.select { |v| v.is_a?(AbstractNode) }
         end
@@ -174,6 +183,20 @@ module GraphQL
           @definitions = definitions
         end
 
+        def to_graphql
+          def deep_to_string(input, current_depth=-1)
+            input.map do |item|
+              if item.is_a?(Array)
+                deep_to_string(item, current_depth + 1)
+              else
+                ('  ' * current_depth) + item
+              end
+            end.join("\n")
+          end
+
+          deep_to_string definitions.map(&:to_graphql)
+        end
+
         def slice_definition(name)
           GraphQL::Language::DefinitionSlice.slice(self, name)
         end
@@ -201,6 +224,25 @@ module GraphQL
           @arguments = arguments
           @directives = directives
           @selections = selections
+        end
+
+        def to_graphql
+          name_maybe_with_arguments = \
+            if arguments.empty?
+              name
+            else
+              "#{name}(#{arguments.map(&:to_graphql).join(' ')})"
+            end
+
+          if @selections.empty?
+            name_maybe_with_arguments
+          else
+            [
+              "#{name_maybe_with_arguments} {",
+              @selections.map(&:to_graphql),
+              "}",
+            ]
+          end
         end
       end
 
@@ -251,6 +293,14 @@ module GraphQL
           @type = type
           @directives = directives
           @selections = selections
+        end
+
+        def to_graphql
+          [
+            '... {',
+            selections.map(&:to_graphql),
+            '}'
+          ]
         end
       end
 
@@ -325,6 +375,14 @@ module GraphQL
           @variables = variables
           @directives = directives
           @selections = selections
+        end
+
+        def to_graphql
+          [
+            "#{operation_type} {",
+            selections.map(&:to_graphql),
+            "}"
+          ]
         end
       end
 
